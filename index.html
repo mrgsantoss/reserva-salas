@@ -2,100 +2,105 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reserva de Laboratórios</title>
   <style>
     body {
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #ffffff;
-  color: #000000;
-  padding: 30px;
-}
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      padding: 30px;
+    }
 
-h1 {
-  font-size: 2em;
-  margin-bottom: 30px;
-  text-align: center;
-  color: #000000;
-}
+    h1 {
+      font-size: 2em;
+      margin-bottom: 30px;
+      text-align: center;
+      color: #000000;
+    }
 
-.sala {
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 25px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
+    .sala {
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
 
-.sala h2 {
-  font-size: 1.3em;
-  color: #b91c1c;
-  margin-bottom: 10px;
-}
+    .sala h2 {
+      font-size: 1.3em;
+      color: #b91c1c;
+      margin-bottom: 10px;
+    }
 
-.dias {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 20px;
-}
+    .dias {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 20px;
+    }
 
-.turno {
-  background-color: #f5f5f5;
-  padding: 10px;
-  border-radius: 8px;
-}
+    .turno {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 8px;
+    }
 
-.dia-titulo {
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 8px;
-  color: #000000;
-}
+    .dia-titulo {
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 8px;
+      color: #000000;
+    }
 
-.dia-btn {
-  padding: 6px 10px;
-  margin: 2px 0;
-  width: 100%;
-  font-size: 13px;
-  border: 1px solid #000;
-  border-radius: 5px;
-  background-color: #ffffff;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  color: #000000;
-}
+    .dia-btn {
+      padding: 6px 10px;
+      margin: 2px 0;
+      width: 100%;
+      font-size: 13px;
+      border: 1px solid #000;
+      border-radius: 5px;
+      background-color: #ffffff;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      color: #000000;
+    }
 
-.dia-btn:hover {
-  background-color: #fca5a5;
-}
+    .dia-btn:hover {
+      background-color: #fca5a5;
+    }
 
-.dia-btn.reservado {
-  background-color: #dc2626;
-  color: #ffffff;
-  border-color: #b91c1c;
-}
+    .dia-btn.reservado {
+      background-color: #dc2626;
+      color: #ffffff;
+      border-color: #b91c1c;
+    }
 
-.dia-btn.reservado:hover {
-  background-color: #b91c1c;
-}
+    .dia-btn.reservado:hover {
+      background-color: #b91c1c;
+    }
 
-button {
-  background-color: #dc2626;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 13px;
-  margin-bottom: 10px;
-  transition: background-color 0.2s ease;
-}
+    button {
+      background-color: #dc2626;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease;
+    }
 
-button:hover {
-  background-color: #b91c1c;
-}
+    button:hover {
+      background-color: #b91c1c;
+    }
 
+    textarea {
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+    }
   </style>
 </head>
 <body>
@@ -115,11 +120,11 @@ button:hover {
     ];
 
     let salas = [
-      { id: 1, nome: "Lab 1", reservas: {} },
-      { id: 2, nome: "Lab 2", reservas: {} },
-      { id: 3, nome: "Lab 3", reservas: {} },
-      { id: 4, nome: "Lab 4", reservas: {} },
-      { id: 5, nome: "Lab 5", reservas: {} },
+      { id: 1, nome: "Lab 1", reservas: {}, observacao: "" },
+      { id: 2, nome: "Lab 2", reservas: {}, observacao: "" },
+      { id: 3, nome: "Lab 3", reservas: {}, observacao: "" },
+      { id: 4, nome: "Lab 4", reservas: {}, observacao: "" },
+      { id: 5, nome: "Lab 5", reservas: {}, observacao: "" },
     ];
 
     function renderSalas() {
@@ -176,6 +181,38 @@ button:hover {
         });
 
         salaDiv.appendChild(diasDiv);
+
+        // Campo de observações
+        const observacaoDiv = document.createElement("div");
+        observacaoDiv.style.marginTop = "15px";
+
+        const label = document.createElement("label");
+        label.textContent = "Observações:";
+        label.style.fontWeight = "bold";
+        label.style.display = "block";
+        label.style.marginBottom = "5px";
+
+        const textarea = document.createElement("textarea");
+        textarea.rows = 3;
+        textarea.style.width = "100%";
+        textarea.style.padding = "6px";
+        textarea.style.border = "1px solid #ccc";
+        textarea.style.borderRadius = "5px";
+        textarea.value = sala.observacao || "";
+
+        const salvarBtn = document.createElement("button");
+        salvarBtn.textContent = "Salvar Observações";
+        salvarBtn.style.marginTop = "8px";
+        salvarBtn.onclick = () => {
+          sala.observacao = textarea.value;
+          alert("Observações salvas!");
+        };
+
+        observacaoDiv.appendChild(label);
+        observacaoDiv.appendChild(textarea);
+        observacaoDiv.appendChild(salvarBtn);
+        salaDiv.appendChild(observacaoDiv);
+
         container.appendChild(salaDiv);
       });
     }
