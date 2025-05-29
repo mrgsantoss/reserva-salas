@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reserva de Laboratórios</title>
+  <style>
+    body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #ffffff;
+  color: #000000;
+  padding: 30px;
+}
+
+h1 {
+  font-size: 2em;
+  margin-bottom: 30px;
+  text-align: center;
+  color: #000000;
+}
+
+.sala {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.sala h2 {
+  font-size: 1.3em;
+  color: #b91c1c;
+  margin-bottom: 10px;
+}
+
+.dias {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 20px;
+}
+
+.turno {
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.dia-titulo {
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 8px;
+  color: #000000;
+}
+
+.dia-btn {
+  padding: 6px 10px;
+  margin: 2px 0;
+  width: 100%;
+  font-size: 13px;
+  border: 1px solid #000;
+  border-radius: 5px;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #000000;
+}
+
+.dia-btn:hover {
+  background-color: #fca5a5;
+}
+
+.dia-btn.reservado {
+  background-color: #dc2626;
+  color: #ffffff;
+  border-color: #b91c1c;
+}
+
+.dia-btn.reservado:hover {
+  background-color: #b91c1c;
+}
+
+button {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-bottom: 10px;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #b91c1c;
+}
+
+  </style>
+</head>
+<body>
+
+  <h1>Reserva de Laboratórios</h1>
+  <div id="salas-container"></div>
+
+  <script>
+    const diasDaSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+    const horarios = [
+      "08:00–10:00",
+      "10:00–12:00",
+      "13:00–15:00",
+      "15:00–17:00",
+      "19:00–21:00",
+      "21:00–22:30"
+    ];
+
+    let salas = [
+      { id: 1, nome: "Lab 1", reservas: {} },
+      { id: 2, nome: "Lab 2", reservas: {} },
+      { id: 3, nome: "Lab 3", reservas: {} },
+      { id: 4, nome: "Lab 4", reservas: {} },
+      { id: 5, nome: "Lab 5", reservas: {} },
+    ];
+
+    function renderSalas() {
+      const container = document.getElementById("salas-container");
+      container.innerHTML = "";
+      salas.forEach(sala => {
+        const salaDiv = document.createElement("div");
+        salaDiv.className = "sala";
+
+        const titulo = document.createElement("h2");
+        titulo.textContent = sala.nome;
+
+        const renomearBtn = document.createElement("button");
+        renomearBtn.textContent = "Renomear";
+        renomearBtn.onclick = () => {
+          const novoNome = prompt("Novo nome da sala:", sala.nome);
+          if (novoNome) {
+            sala.nome = novoNome;
+            renderSalas();
+          }
+        };
+
+        salaDiv.appendChild(titulo);
+        salaDiv.appendChild(renomearBtn);
+
+        const diasDiv = document.createElement("div");
+        diasDiv.className = "dias";
+
+        diasDaSemana.forEach(dia => {
+          const turnoDiv = document.createElement("div");
+          turnoDiv.className = "turno";
+
+          const diaTitulo = document.createElement("div");
+          diaTitulo.className = "dia-titulo";
+          diaTitulo.textContent = dia;
+          turnoDiv.appendChild(diaTitulo);
+
+          horarios.forEach(horario => {
+            const key = `${dia}_${horario}`;
+            const diaBtn = document.createElement("button");
+            diaBtn.className = "dia-btn";
+            if (sala.reservas[key]) {
+              diaBtn.classList.add("reservado");
+            }
+            diaBtn.textContent = horario;
+            diaBtn.onclick = () => {
+              sala.reservas[key] = !sala.reservas[key];
+              renderSalas();
+            };
+            turnoDiv.appendChild(diaBtn);
+          });
+
+          diasDiv.appendChild(turnoDiv);
+        });
+
+        salaDiv.appendChild(diasDiv);
+        container.appendChild(salaDiv);
+      });
+    }
+
+    renderSalas();
+  </script>
+</body>
+</html>
