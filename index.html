@@ -2,222 +2,277 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reserva de Laboratórios</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #ffffff;
-      color: #000000;
+      background: #ffffff;
+      color: #111;
       padding: 30px;
     }
 
     h1 {
-      font-size: 2em;
-      margin-bottom: 30px;
       text-align: center;
-      color: #000000;
+      font-size: 2rem;
+      margin-bottom: 30px;
+      color: #b91c1c;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input[type="date"] {
+      margin-bottom: 20px;
+      padding: 5px;
+      font-size: 16px;
     }
 
     .sala {
-      background-color: #fff;
-      border: 1px solid #ccc;
+      border: 1px solid #e5e5e5;
       border-radius: 10px;
       padding: 20px;
-      margin-bottom: 25px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+      background-color: #fff5f5;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
     }
 
     .sala h2 {
-      font-size: 1.3em;
-      color: #b91c1c;
-      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #7f1d1d;
     }
 
-    .dias {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 20px;
-    }
-
-    .turno {
-      background-color: #f5f5f5;
-      padding: 10px;
-      border-radius: 8px;
-    }
-
-    .dia-titulo {
-      font-weight: bold;
-      text-align: center;
-      margin-bottom: 8px;
-      color: #000000;
-    }
-
-    .dia-btn {
-      padding: 6px 10px;
-      margin: 2px 0;
-      width: 100%;
-      font-size: 13px;
-      border: 1px solid #000;
-      border-radius: 5px;
-      background-color: #ffffff;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      color: #000000;
-    }
-
-    .dia-btn:hover {
-      background-color: #fca5a5;
-    }
-
-    .dia-btn.reservado {
-      background-color: #dc2626;
-      color: #ffffff;
-      border-color: #b91c1c;
-    }
-
-    .dia-btn.reservado:hover {
-      background-color: #b91c1c;
-    }
-
-    button {
-      background-color: #dc2626;
-      color: white;
+    .botao-renomear {
+      background-color: #ef4444;
       border: none;
-      padding: 6px 12px;
+      color: white;
+      padding: 4px 10px;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 0.8rem;
+    }
+
+    .dia {
+      background: #fff0f0;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #fca5a5;
       margin-bottom: 10px;
-      transition: background-color 0.2s ease;
     }
 
-    button:hover {
+    .dia strong {
+      display: block;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+
+    .horario {
+      margin-bottom: 10px;
+    }
+
+    .horario button {
+      margin-top: 4px;
+      padding: 6px 10px;
+      width: 100%;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .semestral {
+      background-color: #1d4ed8;
+      color: #fff;
+    }
+
+    .esporadica {
       background-color: #b91c1c;
+      color: #fff;
     }
 
-    textarea {
-      font-family: inherit;
-      font-size: 14px;
-      resize: vertical;
+    .livre {
+      background-color: #fef2f2;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+
+    .livre:hover {
+      background-color: #fee2e2;
+    }
+
+    .info {
+      margin-top: 5px;
+      font-size: 13px;
+    }
+
+    .editar-horario {
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .editar-horario button {
+      background: #991b1b;
+      color: #fff;
+      border: none;
+      padding: 2px 6px;
+      font-size: 10px;
+      border-radius: 3px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
   <h1>Reserva de Laboratórios</h1>
-  <div id="salas-container"></div>
+
+  <label for="data">Escolha a data da reserva:</label>
+  <input type="date" id="data" onchange="render()" />
+
+  <div id="container"></div>
 
   <script>
-    const diasDaSemana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-    const horarios = [
-      "08:00–10:00",
-      "10:00–12:00",
-      "13:00–15:00",
-      "15:00–17:00",
-      "19:00–21:00",
-      "21:00–22:30"
+    const horariosPadrao = {
+      "A": "19:00 - 21:00",
+      "B": "21:00 - 22:30"
+    };
+
+    const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+    const salas = [
+      { id: 1, nome: "Lab 1", reservasEsporadicas: {}, reservasSemestrais: {} },
+      { id: 2, nome: "Lab 2", reservasEsporadicas: {}, reservasSemestrais: {} },
+      { id: 3, nome: "Lab 3", reservasEsporadicas: {}, reservasSemestrais: {} },
+      { id: 4, nome: "Lab 4", reservasEsporadicas: {}, reservasSemestrais: {} },
+      { id: 5, nome: "Lab 5", reservasEsporadicas: {}, reservasSemestrais: {} }
     ];
 
-    let salas = [
-      { id: 1, nome: "Lab 1", reservas: {}, observacao: "" },
-      { id: 2, nome: "Lab 2", reservas: {}, observacao: "" },
-      { id: 3, nome: "Lab 3", reservas: {}, observacao: "" },
-      { id: 4, nome: "Lab 4", reservas: {}, observacao: "" },
-      { id: 5, nome: "Lab 5", reservas: {}, observacao: "" },
-    ];
+    function getDataSelecionada() {
+      const input = document.getElementById("data");
+      return input?.value || null;
+    }
 
-    function renderSalas() {
-      const container = document.getElementById("salas-container");
+    function render() {
+      const dataSelecionada = getDataSelecionada();
+      const container = document.getElementById("container");
       container.innerHTML = "";
+
+      if (!dataSelecionada) return;
+
+      const dataObj = new Date(dataSelecionada);
+      const diaSemana = diasSemana[dataObj.getDay()];
+
       salas.forEach(sala => {
         const salaDiv = document.createElement("div");
         salaDiv.className = "sala";
 
         const titulo = document.createElement("h2");
-        titulo.textContent = sala.nome;
-
-        const renomearBtn = document.createElement("button");
-        renomearBtn.textContent = "Renomear";
-        renomearBtn.onclick = () => {
-          const novoNome = prompt("Novo nome da sala:", sala.nome);
-          if (novoNome) {
-            sala.nome = novoNome;
-            renderSalas();
-          }
-        };
-
+        titulo.innerHTML = `
+          ${sala.nome}
+          <button class="botao-renomear" onclick="renomearSala(${sala.id})">Renomear</button>
+        `;
         salaDiv.appendChild(titulo);
-        salaDiv.appendChild(renomearBtn);
 
-        const diasDiv = document.createElement("div");
-        diasDiv.className = "dias";
+        const diaDiv = document.createElement("div");
+        diaDiv.className = "dia";
 
-        diasDaSemana.forEach(dia => {
-          const turnoDiv = document.createElement("div");
-          turnoDiv.className = "turno";
+        const diaTitulo = document.createElement("strong");
+        diaTitulo.textContent = `${diaSemana} - ${dataSelecionada}`;
+        diaDiv.appendChild(diaTitulo);
 
-          const diaTitulo = document.createElement("div");
-          diaTitulo.className = "dia-titulo";
-          diaTitulo.textContent = dia;
-          turnoDiv.appendChild(diaTitulo);
+        for (let turno in horariosPadrao) {
+          const faixa = horariosPadrao[turno];
+          const horarioId = `${dataSelecionada}_${turno}`;
+          const semanaId = `${diaSemana}_${turno}`;
 
-          horarios.forEach(horario => {
-            const key = `${dia}_${horario}`;
-            const diaBtn = document.createElement("button");
-            diaBtn.className = "dia-btn";
-            if (sala.reservas[key]) {
-              diaBtn.classList.add("reservado");
+          const reservaEsporadica = sala.reservasEsporadicas[horarioId];
+          const reservaSemestral = sala.reservasSemestrais[semanaId];
+
+          const horarioDiv = document.createElement("div");
+          horarioDiv.className = "horario";
+
+          const botao = document.createElement("button");
+          botao.textContent = faixa;
+
+          if (reservaEsporadica) {
+            botao.className = "esporadica";
+            const info = document.createElement("div");
+            info.className = "info";
+            info.textContent = `${reservaEsporadica.professor} | ${reservaEsporadica.curso} | ${reservaEsporadica.periodo}`;
+            horarioDiv.appendChild(info);
+          } else if (reservaSemestral) {
+            botao.className = "semestral";
+            const info = document.createElement("div");
+            info.className = "info";
+            info.textContent = `${reservaSemestral.professor} | ${reservaSemestral.curso} | ${reservaSemestral.periodo}`;
+            horarioDiv.appendChild(info);
+          } else {
+            botao.className = "livre";
+          }
+
+          botao.onclick = () => {
+            if (reservaEsporadica || reservaSemestral) {
+              if (confirm("Deseja remover esta reserva?")) {
+                if (reservaEsporadica) delete sala.reservasEsporadicas[horarioId];
+                if (reservaSemestral) delete sala.reservasSemestrais[semanaId];
+                render();
+              }
+            } else {
+              const professor = prompt("Nome do professor:");
+              const curso = prompt("Nome do curso:");
+              const periodo = prompt("Período (ex: 2025.1):");
+              const tipo = prompt("Tipo de aula: 'semestral' ou 'esporadica':").toLowerCase();
+              if (professor && curso && (tipo === "semestral" || tipo === "esporadica")) {
+                const reserva = { professor, curso, periodo, tipo };
+                if (tipo === "esporadica") {
+                  sala.reservasEsporadicas[horarioId] = reserva;
+                } else {
+                  sala.reservasSemestrais[semanaId] = reserva;
+                }
+                render();
+              } else {
+                alert("Preencha os dados corretamente.");
+              }
             }
-            diaBtn.textContent = horario;
-            diaBtn.onclick = () => {
-              sala.reservas[key] = !sala.reservas[key];
-              renderSalas();
-            };
-            turnoDiv.appendChild(diaBtn);
-          });
+          };
 
-          diasDiv.appendChild(turnoDiv);
-        });
+          const editarDiv = document.createElement("div");
+          editarDiv.className = "editar-horario";
 
-        salaDiv.appendChild(diasDiv);
+          const editarBtn = document.createElement("button");
+          editarBtn.textContent = "Editar horário";
+          editarBtn.onclick = () => {
+            const novo = prompt("Novo horário:", faixa);
+            if (novo) {
+              horariosPadrao[turno] = novo;
+              render();
+            }
+          };
 
-        // Campo de observações
-        const observacaoDiv = document.createElement("div");
-        observacaoDiv.style.marginTop = "15px";
+          editarDiv.appendChild(editarBtn);
+          horarioDiv.appendChild(botao);
+          horarioDiv.appendChild(editarDiv);
+          diaDiv.appendChild(horarioDiv);
+        }
 
-        const label = document.createElement("label");
-        label.textContent = "Observações:";
-        label.style.fontWeight = "bold";
-        label.style.display = "block";
-        label.style.marginBottom = "5px";
-
-        const textarea = document.createElement("textarea");
-        textarea.rows = 3;
-        textarea.style.width = "100%";
-        textarea.style.padding = "6px";
-        textarea.style.border = "1px solid #ccc";
-        textarea.style.borderRadius = "5px";
-        textarea.value = sala.observacao || "";
-
-        const salvarBtn = document.createElement("button");
-        salvarBtn.textContent = "Salvar Observações";
-        salvarBtn.style.marginTop = "8px";
-        salvarBtn.onclick = () => {
-          sala.observacao = textarea.value;
-          alert("Observações salvas!");
-        };
-
-        observacaoDiv.appendChild(label);
-        observacaoDiv.appendChild(textarea);
-        observacaoDiv.appendChild(salvarBtn);
-        salaDiv.appendChild(observacaoDiv);
-
+        salaDiv.appendChild(diaDiv);
         container.appendChild(salaDiv);
       });
     }
 
-    renderSalas();
+    function renomearSala(id) {
+      const novoNome = prompt("Novo nome do laboratório:");
+      if (novoNome) {
+        const sala = salas.find(s => s.id === id);
+        sala.nome = novoNome;
+        render();
+      }
+    }
+
+    // Inicializar com data de hoje
+    document.getElementById("data").valueAsDate = new Date();
+    render();
   </script>
 </body>
 </html>
