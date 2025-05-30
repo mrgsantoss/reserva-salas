@@ -140,13 +140,18 @@
 
     const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
-    const salas = [
+    // Use localStorage para persistir os dados
+    let salas = JSON.parse(localStorage.getItem('salasReservas')) || [
       { id: 1, nome: "Lab 1", reservasEsporadicas: {}, reservasSemestrais: {} },
       { id: 2, nome: "Lab 2", reservasEsporadicas: {}, reservasSemestrais: {} },
       { id: 3, nome: "Lab 3", reservasEsporadicas: {}, reservasSemestrais: {} },
       { id: 4, nome: "Lab 4", reservasEsporadicas: {}, reservasSemestrais: {} },
       { id: 5, nome: "Lab 5", reservasEsporadicas: {}, reservasSemestrais: {} }
     ];
+
+    function saveData() {
+      localStorage.setItem('salasReservas', JSON.stringify(salas));
+    }
 
     function getDataSelecionada() {
       const input = document.getElementById("data");
@@ -160,8 +165,9 @@
 
       if (!dataSelecionada) return;
 
-      const dataObj = new Date(dataSelecionada);
-      const diaSemana = diasSemana[dataObj.getDay()];
+      const dataObj = new Date(dataSelecionada + "T00:00:00"); // Adiciona T00:00:00 para evitar problemas de fuso horário
+      const diaSemanaIndex = dataObj.getDay();
+      const diaSemanaNome = diasSemana[diaSemanaIndex];
 
       salas.forEach(sala => {
         const salaDiv = document.createElement("div");
@@ -178,15 +184,19 @@
         diaDiv.className = "dia";
 
         const diaTitulo = document.createElement("strong");
-        diaTitulo.textContent = `${diaSemana} - ${dataSelecionada}`;
+        // CORREÇÃO AQUI: Exibir a data e o dia da semana corretamente
+        diaTitulo.textContent = `${dataSelecionada} - ${diaSemanaNome}`; 
         diaDiv.appendChild(diaTitulo);
 
         for (let turno in horariosPadrao) {
           const faixa = horariosPadrao[turno];
-          const horarioId = `${dataSelecionada}_${turno}`;
-          const semanaId = `${diaSemana}_${turno}`;
+          // CORREÇÃO AQUI: Definir as chaves de forma correta
+          const horarioId = `${dataSelecionada}_${turno}`; // Chave para reservas esporádicas (ex: "2023-10-26_A")
+          const semanaId = `${diaSemanaNome}_${turno}`;   // Chave para reservas semestrais (ex: "Segunda_A")
 
+          // Busca a reserva esporádica para a data específica
           const reservaEsporadica = sala.reservasEsporadicas[horarioId];
+          // Busca a reserva semestral para o dia da semana específico
           const reservaSemestral = sala.reservasSemestrais[semanaId];
 
           const horarioDiv = document.createElement("div");
@@ -195,44 +205,56 @@
           const botao = document.createElement("button");
           botao.textContent = faixa;
 
+          let reservaAtiva = null; // Variável para controlar qual reserva está ativa
+          
+          // Lógica de prioridade: esporádica > semestral
           if (reservaEsporadica) {
             botao.className = "esporadica";
-            const info = document.createElement("div");
-            info.className = "info";
-            info.textContent = `${reservaEsporadica.professor} | ${reservaEsporadica.curso} | ${reservaEsporadica.periodo}`;
-            horarioDiv.appendChild(info);
+            reservaAtiva = reservaEsporadica;
           } else if (reservaSemestral) {
             botao.className = "semestral";
-            const info = document.createElement("div");
-            info.className = "info";
-            info.textContent = `${reservaSemestral.professor} | ${reservaSemestral.curso} | ${reservaSemestral.periodo}`;
-            horarioDiv.appendChild(info);
+            reservaAtiva = reservaSemestral;
           } else {
             botao.className = "livre";
           }
 
+          if (reservaAtiva) {
+            const info = document.createElement("div");
+            info.className = "info";
+            info.textContent = `${reservaAtiva.professor} | ${reservaAtiva.curso} | ${reservaAtiva.periodo}`;
+            horarioDiv.appendChild(info);
+          }
+          
+          // Lógica do clique do botão
           botao.onclick = () => {
-            if (reservaEsporadica || reservaSemestral) {
+            if (reservaAtiva) { // Se houver uma reserva, perguntar se deseja remover
               if (confirm("Deseja remover esta reserva?")) {
-                if (reservaEsporadica) delete sala.reservasEsporadicas[horarioId];
-                if (reservaSemestral) delete sala.reservasSemestrais[semanaId];
+                if (reservaEsporadica) { // Se for esporádica, remove a esporádica
+                  delete sala.reservasEsporadicas[horarioId];
+                } else if (reservaSemestral) { // Caso contrário, se for semestral, remove a semestral
+                  delete sala.reservasSemestrais[semanaId];
+                }
+                saveData(); // Salva após a remoção
                 render();
               }
-            } else {
+            } else { // Se não houver reserva, criar uma nova
               const professor = prompt("Nome do professor:");
               const curso = prompt("Nome do curso:");
               const periodo = prompt("Período (ex: 2025.1):");
-              const tipo = prompt("Tipo de aula: 'semestral' ou 'esporadica':").toLowerCase();
-              if (professor && curso && (tipo === "semestral" || tipo === "esporadica")) {
+              const tipo = prompt("Tipo de aula: 'semestral' ou 'esporadica':").toLowerCase(); // Pede o tipo
+
+              if (professor && curso && periodo && (tipo === "semestral" || tipo === "esporadica")) {
                 const reserva = { professor, curso, periodo, tipo };
+                
                 if (tipo === "esporadica") {
-                  sala.reservasEsporadicas[horarioId] = reserva;
-                } else {
-                  sala.reservasSemestrais[semanaId] = reserva;
+                  sala.reservasEsporadicas[horarioId] = reserva; // Usa horarioId para esporádica
+                } else if (tipo === "semestral") {
+                  sala.reservasSemestrais[semanaId] = reserva;   // Usa semanaId para semestral
                 }
+                saveData(); // Salva após a adição
                 render();
               } else {
-                alert("Preencha os dados corretamente.");
+                alert("Preencha todos os dados corretamente e escolha 'semestral' ou 'esporadica'.");
               }
             }
           };
@@ -246,13 +268,17 @@
             const novo = prompt("Novo horário:", faixa);
             if (novo) {
               horariosPadrao[turno] = novo;
-              render();
+              // Não precisa salvar salas aqui, pois é um horário padrão.
+              // Se os horários padrão são fixos, eles não deveriam ser alterados pelo usuário
+              // ou deveriam ser persistidos separadamente se for uma funcionalidade.
+              // Como estamos assumindo que eles podem ser editados, render() reflete a mudança.
+              render(); 
             }
           };
 
           editarDiv.appendChild(editarBtn);
           horarioDiv.appendChild(botao);
-          horarioDiv.appendChild(editarDiv);
+          horarioDiv.appendChild(editarDiv); // Adiciona o botão de editar horário
           diaDiv.appendChild(horarioDiv);
         }
 
@@ -265,14 +291,23 @@
       const novoNome = prompt("Novo nome do laboratório:");
       if (novoNome) {
         const sala = salas.find(s => s.id === id);
-        sala.nome = novoNome;
-        render();
+        if (sala) { // Garante que a sala foi encontrada
+            sala.nome = novoNome;
+            saveData(); // Salva após renomear
+            render();
+        }
       }
     }
 
     // Inicializar com data de hoje
-    document.getElementById("data").valueAsDate = new Date();
-    render();
+    document.addEventListener('DOMContentLoaded', () => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        document.getElementById("data").value = `${year}-${month}-${day}`;
+        render(); // Renderiza após definir a data inicial
+    });
   </script>
 </body>
 </html>
